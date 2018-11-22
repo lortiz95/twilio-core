@@ -1,7 +1,7 @@
 'use strict';
 let path = require('path');
 const Twilio = require('twilio');
-const TwilioClient = require('../../services/twilio')
+const TwilioClient = require('../../services/twilio');
 
 const AccessToken = Twilio.jwt.AccessToken;
 const VideoGrant = AccessToken.VideoGrant;
