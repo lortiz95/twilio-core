@@ -19,8 +19,9 @@ const all = {
 
 	// Twilio API tokens
 	twilio: {
-		accountSid: process.env.ACCOUNT_SID,
-		authToken:  process.env.AUTH_TOKEN,
+		accountSid: process.env.TWILIO_ACCOUNT_SID,
+		authToken: process.env.TWILIO_AUTH_TOKEN,
+		appSid: process.env.TWILIO_TWIML_APP_SID,
 		apiKey:  process.env.API_KEY,
 		workspaceSid: process.env.WORSPACE_SID,
 		workflowSid: process.env.WORFLOW_SID,

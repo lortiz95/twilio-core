@@ -8,5 +8,4 @@ module.exports = server => {
 			require("./"+folder)(server);
 		}
     });
-    // require('./videos')(server);
 }
