@@ -16,6 +16,19 @@ app.use(bodyParser.json());
 
 app.use(cors())
 
+app.post('/twilio', (req, res) => {
+    console.log(req.body);
+
+    res.status(200).send('Bienvenido Manuel');
+})
+
+
+app.post('/response', (req, res) => {
+    console.log(req.body);
+
+    res.status(200);
+})
+
 require('./src/routes')(app);
 
 require('./src/services/socket').run(io);

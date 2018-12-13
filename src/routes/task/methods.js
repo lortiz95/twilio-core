@@ -14,10 +14,11 @@ exports.task = (req, res) => {
     .create({attributes: JSON.stringify({
       type: 'support',
       task_type: 'Voice',
-    }), workflowSid: 'WW5d761c97a82738b08e436eedb4761201', taskChannel: 'voice'})
-    .then(task => console.log(task.sid))
+    }), workflowSid: 'WW5d761c97a82738b08e436eedb4761201', taskChannel: 'SMS'})
+    .then(task => console.log(task))
     .done();
 
   res.setHeader('Content-Type', 'application/xml');
   res.end()
 }
+
