@@ -25,6 +25,14 @@ const all = {
 		apiKey:  process.env.API_KEY,
 		workspaceSid: process.env.WORSPACE_SID,
 		workflowSid: process.env.WORFLOW_SID,
+	},
+
+	apiwha : {
+		QNT: {
+			api: process.env.QNT_API,
+			token: process.env.QNT_TOKEN,
+			number: process.env.QNT_NUMBER
+		}
 	}
 
 };
