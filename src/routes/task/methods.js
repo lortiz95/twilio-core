@@ -23,7 +23,7 @@ const whatsappServices = require('../../services/whatsapp')
 
 function getChannelAttrs(from, to) {
   return {
-        text: "Customer requested support by sending Whatsapp",
+        text: "Nueva comunicacion por Whatsapp",
         channelName: "chat",
         from, 
         to
@@ -34,18 +34,32 @@ function getChannelAttrs(from, to) {
 
 
 exports.subscribe = function(req, res) {
-  
-  chatService.channels(req.params.channel).members(req.params.worker).remove().then(member => {
+  console.log('adding member')
+  chatService.channels(req.params.channel).members(req.params.worker).remove()
+  .then(member => {
     chatService.channels(req.params.channel).members.create({
       identity: req.params.worker,
       attributes: JSON.stringify({})
     })
     .then(member => {
-      res.status(200).send(member)
+      return res.status(200).send(member)
     })
     .catch(err => {
       console.error(`unable to add a member to the channel`,err);
-      res.status(500).send("")
+      return res.status(500).send("")
+    });
+  })
+  .catch(() => {
+    chatService.channels(req.params.channel).members.create({
+      identity: req.params.worker,
+      attributes: JSON.stringify({})
+    })
+    .then(member => {
+      return res.status(200).send(member)
+    })
+    .catch(err => {
+      console.error(`unable to add a member to the channel`,err);
+      return res.status(500).send("")
     });
   })
 }
@@ -120,7 +134,7 @@ function sendMessage(channel, from, body) {
 }
 
 function getOrCreateChatChannel(from, to, attrs) {
-  const name = from.replace(/[^\w:]/gi, "").replace('whatsapp', '').replace("+", '');
+  const name = from.replace(/[^\w:]/gi, "").replace('whatsapp:', '').replace("+", '');
   console.log(name)
   const uniqueName = `${attrs.channelName}_channel_${name}`;
   const channelAttributes = { created_by: 'system', from,  to };
@@ -176,7 +190,7 @@ function createTask(from, channelSid) {
     taskChannel: 'chat',
     timeout: 3600,
     attributes: JSON.stringify({
-      name: from,
+      name: from.replace('+whatsapp:'),
       channelSid: channelSid || "default",
       channelType: 'whatsapp',
     })
