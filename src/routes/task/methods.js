@@ -120,7 +120,8 @@ function sendMessage(channel, from, body) {
 }
 
 function getOrCreateChatChannel(from, to, attrs) {
-  const name = from.replace(/[^\w:]/gi, "");
+  const name = from.replace(/[^\w:]/gi, "").replace('whatsapp', '').replace("+", '');
+  console.log(name)
   const uniqueName = `${attrs.channelName}_channel_${name}`;
   const channelAttributes = { created_by: 'system', from,  to };
 
@@ -138,8 +139,7 @@ function getOrCreateChatChannel(from, to, attrs) {
 }
 
 function createNewChatChannel(uniqueName, channelAttributes) {
-  return chatService.channels.create({ uniqueName, attributes: JSON.stringify(channelAttributes) })
-  .then(channel => addMemberToChannel(channel, from, {} ));
+  return chatService.channels.create({ uniqueName, attributes: JSON.stringify(channelAttributes) }).then(channel => addMemberToChannel(channel, from, {} ));
 }
 
 function fetchChannel(uniqueName, channelAttributes) {
