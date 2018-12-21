@@ -34,17 +34,20 @@ function getChannelAttrs(from, to) {
 
 
 exports.subscribe = function(req, res) {
-  chatService.channels(req.params.channel).members.create({
-    identity: req.params.worker,
-    attributes: JSON.stringify({})
+  
+  chatService.channels(req.params.channel).members(req.params.worker).remove().then(member => {
+    chatService.channels(req.params.channel).members.create({
+      identity: req.params.worker,
+      attributes: JSON.stringify({})
+    })
+    .then(member => {
+      res.status(200).send(member)
+    })
+    .catch(err => {
+      console.error(`unable to add a member to the channel`,err);
+      res.status(500).send("")
+    });
   })
-  .then(member => {
-    res.status(200).send(member)
-  })
-  .catch(err => {
-    console.error(`unable to add a member to the channel`,err);
-    res.status(500).send("")
-  });
 }
 
 exports.messages = function(req, res) {
