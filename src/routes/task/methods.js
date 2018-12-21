@@ -155,7 +155,7 @@ function getOrCreateChatChannel(from, to, attrs) {
   const name = from.replace(/[^\w:]/gi, "").replace('whatsapp:', '').replace("+", '');
   console.log(name)
   const uniqueName = `${attrs.channelName}_channel_${name}`;
-  const channelAttributes = { };
+  const channelAttributes = { from, to };
 
   return fetchChannel(uniqueName, channelAttributes).catch(err => {
 
