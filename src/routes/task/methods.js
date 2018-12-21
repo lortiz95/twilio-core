@@ -20,6 +20,22 @@ const taskrouterService = twilio.taskrouter.v1.workspaces(TWILIO_WORKSPACE_SID);
 
 const whatsappServices = require('../../services/whatsapp')
 
+// setTimeout(() => {
+//   console.log('starting')
+//   let prom = [];
+//   chatService.channels.each(channel => {
+//     console.log(channel.sid)
+//     // prom.push(chatService.channels(channel.sid).remove())
+//   })
+// }, 5000);
+
+// setTimeout(() => {
+//   console.log('to remove')
+//   Promise.all(prom).then(() => {
+//     console.log('REMOVED')
+//   }).catch((err)=> console.log(err))
+// }, 5000);
+
 
 function getChannelAttrs(from, to) {
   return {
@@ -78,6 +94,8 @@ exports.messages = function(req, res) {
   
 
 }
+
+
 exports.task = function(req, res) {
 
     
@@ -137,13 +155,15 @@ function getOrCreateChatChannel(from, to, attrs) {
   const name = from.replace(/[^\w:]/gi, "").replace('whatsapp:', '').replace("+", '');
   console.log(name)
   const uniqueName = `${attrs.channelName}_channel_${name}`;
-  const channelAttributes = { created_by: 'system', from,  to };
+  const channelAttributes = { };
 
   return fetchChannel(uniqueName, channelAttributes).catch(err => {
 
     return createNewChatChannel(uniqueName, channelAttributes).catch(err => {
       if (err.code === 50307) {
-        console.log(`channel already exists`, err);
+        console.log('====================================');
+        console.log('Al ready created', err);
+        console.log('====================================');
         return fetchChannel(uniqueName, channelAttributes).then(channel => addMemberToChannel(channel, from, attrs));
       }
       throw new Error(`Unable to create a chat channel`);
@@ -159,7 +179,9 @@ function createNewChatChannel(uniqueName, channelAttributes) {
 function fetchChannel(uniqueName, channelAttributes) {
   const channelService = chatService.channels(uniqueName);
   return channelService.fetch().then(channel => {
+    console.log('====================================');
     console.log(`channel ${uniqueName} found with ${channel.sid}`);
+    console.log('====================================');
     return channelService
       .update({ attributes: JSON.stringify(channelAttributes) })
       .then(() => channel);
@@ -167,7 +189,7 @@ function fetchChannel(uniqueName, channelAttributes) {
 }
 
 function addMemberToChannel(channel, identity, attrs) {
-  return chatService.channels(channel.sid).members.create({ identity, attributes: JSON.stringify(attrs)})
+  return chatService.channels(channel.sid).members.create({ identity: identity.replace("+whatsapp:+", ''), attributes: JSON.stringify(attrs)})
     .then(member => channel)
     .catch(err => {
       console.error(`unable to add a member to the channel ${channel.uniqueName}`,err);
@@ -196,7 +218,7 @@ function createTask(from, channelSid) {
     })
   };
 
-  return taskrouterService.tasks.create(data).then(task => task).catch(err => { throw err });
+  return taskrouterService.tasks.create(data);
 }
 
 
