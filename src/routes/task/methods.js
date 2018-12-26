@@ -179,9 +179,6 @@ function createNewChatChannel(uniqueName, channelAttributes) {
 function fetchChannel(uniqueName, channelAttributes) {
   const channelService = chatService.channels(uniqueName);
   return channelService.fetch().then(channel => {
-    console.log('====================================');
-    console.log(`channel ${uniqueName} found with ${channel.sid}`);
-    console.log('====================================');
     return channelService
       .update({ attributes: JSON.stringify(channelAttributes) })
       .then(() => channel);
@@ -202,7 +199,16 @@ function getOrCreateOngoingTasks(from, channelSid) {
     assignmentStatus: "pending,assigned,reserved",
     evaluateTaskAttributes: `(identity=='${from}') AND (channelSid=='${channelSid}')`
   };
-  return taskrouterService.tasks.list(query).then(tasks => tasks.length === 0 ? createTask(from, channelSid) : tasks[0] );
+  taskrouterService.tasks.list({}).then((response) => {
+    console.log('================TASKS====================');
+    console.log(response);
+    console.log('====================================');
+  }).catch((err) => {
+    console.log('===============ERR TASKS=====================');
+    console.log(err);
+    console.log('====================================');
+  })
+  return taskrouterService.tasks.list(query).then(tasks => tasks.length < 1 ? createTask(from, channelSid) : tasks[0] );
 }
 
 function createTask(from, channelSid) {
@@ -212,7 +218,7 @@ function createTask(from, channelSid) {
     taskChannel: 'chat',
     timeout: 3600,
     attributes: JSON.stringify({
-      name: from.replace('+whatsapp:'),
+      name: from.replace('+whatsapp:', ''),
       channelSid: channelSid || "default",
       channelType: 'whatsapp',
     })
@@ -220,6 +226,31 @@ function createTask(from, channelSid) {
 
   return taskrouterService.tasks.create(data);
 }
+
+
+// client.video.rooms.create({uniqueName: 'DailyStandup'})
+//     .then(room => {
+//       console.log(room)
+//       const data = {
+//         workflowSid: TWILIO_WORKFLOW_SID,
+//         taskChannel: 'voice',
+//         timeout: 3600,
+//         attributes: JSON.stringify({
+//           name: 'Manuel',
+//           channelSid: room.sid || "default",
+//           channelType: 'web',
+//         })
+//       };
+      
+//       taskrouterService.tasks.create(data).then((response) => {
+//         console.log('====================================');
+//         console.log(response);
+//         console.log('====================================');
+//       })
+      
+//     })
+//     .done();
+
 
 
 exports.interaction = WhatsappInteraction;

@@ -11,32 +11,13 @@ const TWILIO_WORKFLOW_SID = 'WWb51c8f5d8c4801ed5dd32b91bfb493a5';
 const TWILIO_CHAT_SERVICE_SID = 'IS015edca31b264901ad0704be93a59df8';
 
 
-
 exports.get = (req, res) => {
   
   let calls = []
   client.calls.each((call) => {
     calls.push(call);
   });
-
-  res.status(200).send(calls)
-  client.calls.list().then((call) => {
-    console.log(call)
-  })
-
-  // client.recordings('REXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
-  //     .fetch()
-  //     .then(recording => console.log(recording.callSid))
-  //     .done();
-
-  
+  setTimeout(() => {
+    res.status(200).send(calls)
+  }, 2000)  
 };
-
-const getCalls = () => (
-  new Promise((resolve, reject) => {
-    let calls = [];
-    client.calls.each((call) => {
-      calls.push(call);
-    });
-  })
-)
