@@ -62,7 +62,7 @@ exports.subscribe = function(req, res) {
     attributes: JSON.stringify({})
   })
   .then(member => {
-    res.status(200).send(chat)
+    res.status(200).send(newMember)
   })
   .catch(err => {
     if(err.code == 50404) {
