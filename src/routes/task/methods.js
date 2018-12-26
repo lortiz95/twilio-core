@@ -53,8 +53,12 @@ function getChannelAttrs(from, to) {
 
 exports.subscribe = function(req, res) {
   console.log('adding member')
+  let newMember = req.params.worker.substring(0, req.params.worker.indexOf('@'));
+  console.log('====================================');
+  console.log(newMember);
+  console.log('====================================');
   chatService.channels(req.params.channel).members.create({
-    identity: req.params.worker,
+    identity: newMember,
     attributes: JSON.stringify({})
   })
   .then(member => {
