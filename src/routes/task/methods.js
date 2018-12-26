@@ -58,27 +58,35 @@ exports.subscribe = function(req, res) {
   console.log('====================================');
   console.log(newMember);
   console.log('====================================');
-  chatService.channels(req.params.channel).members().fetch().then((members) => {
-    console.log('===============MEMBERS=====================');
-    console.log(members);
-    console.log('====================================');
+  let currents = [];
+  chatService.channels(req.params.channel).members.each((member) => {
+    console.log(member)
+    currents.push(member);
   })
-  chatService.channels(req.params.channel).members.create({
-    identity: newMember,
-    attributes: JSON.stringify({})
-  })
-  .then(() => {
-    res.status(200).send(newMember)
-  })
-  .catch(err => {
-    if(err.code == 50404) {
-      console.log('user is already member of this chat')
+  setTimeout(() => {
+    if(currents.indexOf(newMember) == -1) {
+      chatService.channels(req.params.channel).members.create({
+        identity: newMember,
+        attributes: JSON.stringify({})
+      })
+      .then(() => {
+        res.status(200).send(newMember)
+      })
+      .catch(err => {
+        if(err.code == 50404) {
+          console.log('user is already member of this chat')
+          res.status(200).send({})
+          return
+        }
+        console.error(`unable to add a member to the channel`,err);
+        res.status(500).send("")
+      });
+    }  
+    else{
       res.status(200).send({})
-      return
     }
-    console.error(`unable to add a member to the channel`,err);
-    res.status(500).send("")
-  });
+  }, 1000);
+  
 }
 
 exports.messages = function(req, res) {
