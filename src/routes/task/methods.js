@@ -53,11 +53,16 @@ function getChannelAttrs(from, to) {
 
 exports.subscribe = function(req, res) {
   console.log('adding member')
-  // let newMember = req.params.worker.substring(0, req.params.worker.indexOf('@'));
+  
   let newMember = req.params.worker;
   console.log('====================================');
   console.log(newMember);
   console.log('====================================');
+  chatService.channels(req.params.channel).members().fetch().then((members) => {
+    console.log('===============MEMBERS=====================');
+    console.log(members);
+    console.log('====================================');
+  })
   chatService.channels(req.params.channel).members.create({
     identity: newMember,
     attributes: JSON.stringify({})
@@ -159,7 +164,13 @@ function getOrCreateChatChannel(from, to, attrs) {
 
   return fetchChannel(uniqueName, channelAttributes).catch(err => {
 
-    return createNewChatChannel(uniqueName, channelAttributes).catch(err => {
+    return createNewChatChannel(uniqueName, channelAttributes).then(channel => {
+      return channel
+    })
+    .catch(err => {
+      console.log('===============CHAT CREATE=====================');
+      console.log(err);
+      console.log('====================================');
       if (err.code === 50307) {
         console.log('====================================');
         console.log('Al ready created', err);
