@@ -53,7 +53,8 @@ function getChannelAttrs(from, to) {
 
 exports.subscribe = function(req, res) {
   console.log('adding member')
-  let newMember = req.params.worker.substring(0, req.params.worker.indexOf('@'));
+  // let newMember = req.params.worker.substring(0, req.params.worker.indexOf('@'));
+  let newMember = req.params.worker;
   console.log('====================================');
   console.log(newMember);
   console.log('====================================');
@@ -61,7 +62,7 @@ exports.subscribe = function(req, res) {
     identity: newMember,
     attributes: JSON.stringify({})
   })
-  .then(member => {
+  .then(() => {
     res.status(200).send(newMember)
   })
   .catch(err => {
