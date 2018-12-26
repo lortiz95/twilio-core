@@ -181,17 +181,8 @@ function addMemberToChannel(channel, identity, attrs) {
 function getOrCreateOngoingTasks(from, channelSid) {
   let query = {
     assignmentStatus: "pending,assigned,reserved",
-    evaluateTaskAttributes: `(identity=='${from}') AND (channelSid=='${channelSid}')`
+    evaluateTaskAttributes: `(identity=='${from}') OR (channelSid=='${channelSid}')`
   };
-  taskrouterService.tasks.list({}).then((response) => {
-    console.log('================TASKS====================');
-    console.log(response);
-    console.log('====================================');
-  }).catch((err) => {
-    console.log('===============ERR TASKS=====================');
-    console.log(err);
-    console.log('====================================');
-  })
   return taskrouterService.tasks.list(query).then(tasks => tasks.length < 1 ? createTask(from, channelSid) : tasks[0] );
 }
 
@@ -235,6 +226,16 @@ function createTask(from, channelSid) {
 //     })
 //     .done();
 
+
+// getOrCreateOngoingTasks("+whatsapp1132066451", 'CH7334cb6d5cdc48b7a0f8efe584d08cf5').then((Response)=> {
+//   console.log('====================================');
+//   console.log(Response);
+//   console.log('====================================');
+// }).catch((erroro) => {
+//   console.log('=============ERROR=======================');
+//   console.log(erroro);
+//   console.log('====================================');
+// })
 
 
 exports.interaction = WhatsappInteraction;
