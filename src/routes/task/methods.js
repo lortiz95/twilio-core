@@ -20,12 +20,13 @@ const taskrouterService = twilio.taskrouter.v1.workspaces(TWILIO_WORKSPACE_SID);
 
 const whatsappServices = require('../../services/whatsapp')
 
+// let prom = [];
 // setTimeout(() => {
 //   console.log('starting')
-//   let prom = [];
+  
 //   chatService.channels.each(channel => {
 //     console.log(channel.sid)
-//     // prom.push(chatService.channels(channel.sid).remove())
+//     prom.push(chatService.channels(channel.sid).remove())
 //   })
 // }, 5000);
 
@@ -34,7 +35,8 @@ const whatsappServices = require('../../services/whatsapp')
 //   Promise.all(prom).then(() => {
 //     console.log('REMOVED')
 //   }).catch((err)=> console.log(err))
-// }, 5000);
+// }, 15000);
+
 
 
 function getChannelAttrs(from, to) {
@@ -56,11 +58,16 @@ exports.subscribe = function(req, res) {
     attributes: JSON.stringify({})
   })
   .then(member => {
-    return res.status(200).send(member)
+    res.status(200).send(chat)
   })
   .catch(err => {
+    if(err.code == 50404) {
+      console.log('user is already member of this chat')
+      res.status(200).send({})
+      return
+    }
     console.error(`unable to add a member to the channel`,err);
-    return res.status(500).send("")
+    res.status(500).send("")
   });
 }
 
@@ -72,6 +79,10 @@ exports.messages = function(req, res) {
     whatsappServices.sendMessage(data)
     .then((response) => {
       return res.status(200).send(channel)
+    }).catch(err => {
+      console.log('===============ERROR AL ENVIAR WP=====================');
+      console.log(err);
+      console.log('====================================');
     })
   })
 
