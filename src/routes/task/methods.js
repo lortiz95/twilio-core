@@ -118,70 +118,43 @@ exports.messages = function(req, res) {
 
 
 exports.task = function(req, res) {
-
-    
-  WhatsappInteraction(req.body)
-  .then((task) => {
-    console.log('====================================');
-    console.log(task);
-    console.log('====================================');
-    res.status(200).send(task)
-  })
-  .cath((err) => {
-    console.log('=============ERROR=======================');
-    console.log(err);
-    console.log('====================================');
-  })
-  
-
+  WhatsappInteraction(req.body, res)
 };
 
-const WhatsappInteraction = (payload) => {
-    return new Promise((resolve, reject) => {
-      const { From, To, Body } = payload;
-      const attrs = getChannelAttrs(From, To);
 
-      getOrCreateChatChannel(From, To, attrs)
-        .then(channel =>
-          getOrCreateOngoingTasks(From, channel.sid).then(task => {
-            return { task, channel };
-          })
-        )
-        .then(({ task, channel }) => {
-          return sendMessage(channel, From, Body).then(message => {
-            return { task, channel, message };
-          });
-        })
-        .then(({ task, channel, message }) => {
-          const msg = `new message received from ${ message.from } with: chatChannelSid ${channel.sid}, taskSid:${task.sid}`;
-          console.log(msg)
-          return resolve(task)
-        })
-        .catch(err => {
-          console.error(err);
-          return reject(err)
-        });
-    })
+const WhatsappInteraction = (payload, res) => {
+    const { From, To, Body } = payload;
+    const attrs = getChannelAttrs(From, To);
+
+    getOrCreateChatChannel(From, To, attrs)
+
+      .then(channel => getOrCreateOngoingTasks(From, channel.sid).then(task => ({ task, channel })))
+
+      .then(({ task, channel }) => sendMessage(channel, From, Body).then(message => ({ task, channel, message })))
+
+      .then(({ task, channel, message }) => {
+        res.status(200).send(task)
+      })
+      .catch(err => {
+        console.error(err);
+        res.status(500).send(err)
+      });
 }
 
 
 
 function sendMessage(channel, from, body) {
   return chatService.channels(channel.sid).messages.create({ from, body, attributes: JSON.stringify({ source: "inbound" })})
-  .then(message => {
-    return message;
-  });
 }
 
 function getOrCreateChatChannel(from, to, attrs) {
   const name = from.replace(/[^\w:]/gi, "");
-  console.log(name)
   const uniqueName = `${attrs.channelName}_channel_${name}`;
   const channelAttributes = { from, to, type: 'public' };
 
   return fetchChannel(uniqueName, channelAttributes).catch(err => {
 
-    return createNewChatChannel(uniqueName, channelAttributes).then(channel => {
+    return createNewChatChannel(uniqueName, channelAttributes, from).then(channel => {
       return channel
     })
     .catch(err => {
@@ -200,7 +173,7 @@ function getOrCreateChatChannel(from, to, attrs) {
 
 }
 
-function createNewChatChannel(uniqueName, channelAttributes) {
+function createNewChatChannel(uniqueName, channelAttributes, from) {
   return chatService.channels.create({ uniqueName, attributes: JSON.stringify(channelAttributes) }).then(channel => addMemberToChannel(channel, from, {} ));
 }
 
@@ -235,9 +208,9 @@ function createTask(from, channelSid) {
   const data = {
     workflowSid: TWILIO_WORKFLOW_SID,
     taskChannel: 'chat',
-    timeout: 2500,
+    timeout: 3600,
     attributes: JSON.stringify({
-      name: from,
+      name: from.replace('whatsapp:+', ''),
       channelSid: channelSid || "default",
       channelType: 'whatsapp',
     })
@@ -245,6 +218,8 @@ function createTask(from, channelSid) {
 
   return taskrouterService.tasks.create(data);
 }
+
+
 
 
 exports.interaction = WhatsappInteraction;
