@@ -101,7 +101,7 @@ exports.messages = function(req, res) {
   chatService.channels(req.body.ChannelSid).fetch().then((channel) => {
     let {from, to } = JSON.parse(channel.attributes);
 
-    let  data = { number: from, text: req.body.Body }
+    let  data = { number: from.replace('whatsapp:+', ''), text: req.body.Body }
     whatsappServices.sendMessage(data)
     .then((response) => {
       return res.status(200).send(channel)
