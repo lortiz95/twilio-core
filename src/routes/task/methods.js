@@ -54,54 +54,39 @@ exports.subscribe = function(req, res) {
   let toRemove = []
   let currents = [];
   console.log('New Member', newMember);
-  chatService.channels(req.params.channel).members.create({
-    identity: newMember,
-    attributes: JSON.stringify({})
+  chatService.channels(req.params.channel).members.each((member) => {
+    console.log(member)
+    currents.push(member);
   })
-  .then(() => {
-    res.status(200).send(newMember)
-  })
-  .catch(err => {
-    if(err.code == 50404) {
-      console.log('user is already member of this chat')
-      return res.status(200).send({})
-    }
-    console.error(`unable to add a member to the channel`,err);
-    res.status(500).send("")
-  });
-  // chatService.channels(req.params.channel).members.each((member) => {
-  //   console.log(member)
-  //   currents.push(member);
-  // })
-  // setTimeout(() => {
-  //   currents.map((item) => {
-  //     toRemove.push(chatService.channels(req.params.channel).members.get(item.sid).remove())
-  //   })  
-  // }, 500);
+  setTimeout(() => {
+    currents.map((item) => {
+      toRemove.push(chatService.channels(req.params.channel).members.get(item.sid).remove())
+    })  
+  }, 500);
 
-  // setTimeout(() => {
-  //   Promise.all(toRemove).then((response) => {
-  //     console.log('====================================');
-  //     console.log("All removed");
-  //     console.log('====================================');
-  //     chatService.channels(req.params.channel).members.create({
-  //       identity: newMember,
-  //       attributes: JSON.stringify({})
-  //     })
-  //     .then(() => {
-  //       res.status(200).send(newMember)
-  //     })
-  //     .catch(err => {
-  //       if(err.code == 50404) {
-  //         console.log('user is already member of this chat')
-  //         res.status(200).send({})
-  //         return
-  //       }
-  //       console.error(`unable to add a member to the channel`,err);
-  //       res.status(500).send("")
-  //     });
-  //   })
-  // }, 1200);
+  setTimeout(() => {
+    Promise.all(toRemove).then((response) => {
+      console.log('====================================');
+      console.log("All removed");
+      console.log('====================================');
+      chatService.channels(req.params.channel).members.create({
+        identity: newMember,
+        attributes: JSON.stringify({})
+      })
+      .then(() => {
+        res.status(200).send(newMember)
+      })
+      .catch(err => {
+        if(err.code == 50404) {
+          console.log('user is already member of this chat')
+          res.status(200).send({})
+          return
+        }
+        console.error(`unable to add a member to the channel`,err);
+        res.status(500).send("")
+      });
+    })
+  }, 1500);
   
 }
 
