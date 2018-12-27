@@ -59,13 +59,23 @@ exports.subscribe = function(req, res) {
   console.log('====================================');
   console.log(newMember);
   console.log('====================================');
+  let toRemove = []
   let currents = [];
   chatService.channels(req.params.channel).members.each((member) => {
     console.log(member)
     currents.push(member);
   })
   setTimeout(() => {
-    if(currents.indexOf(newMember) == -1) {
+    currents.map((item) => {
+      toRemove.push(chatService.channels(req.params.channel).members.get(item.sid).remove())
+    })  
+  }, 500);
+
+  setTimeout(() => {
+    Promise.all(toRemove).then((response) => {
+      console.log('====================================');
+      console.log("All removed");
+      console.log('====================================');
       chatService.channels(req.params.channel).members.create({
         identity: newMember,
         attributes: JSON.stringify({})
@@ -82,11 +92,8 @@ exports.subscribe = function(req, res) {
         console.error(`unable to add a member to the channel`,err);
         res.status(500).send("")
       });
-    }  
-    else{
-      res.status(200).send({})
-    }
-  }, 1000);
+    })
+  }, 1200);
   
 }
 
@@ -228,7 +235,7 @@ function createTask(from, channelSid) {
   const data = {
     workflowSid: TWILIO_WORKFLOW_SID,
     taskChannel: 'chat',
-    timeout: 3600,
+    timeout: 2500,
     attributes: JSON.stringify({
       name: from,
       channelSid: channelSid || "default",
