@@ -101,14 +101,12 @@ exports.messages = function(req, res) {
   chatService.channels(req.body.ChannelSid).fetch().then((channel) => {
     let {from, to } = JSON.parse(channel.attributes);
 
-    let  data = { number: from.replace('whatsapp:+', ''), text: req.body.Body }
-    whatsappServices.sendMessage(data)
+    whatsappServices.sendMessage({ number: from.replace('whatsapp:', ''), text: req.body.Body })
     .then((response) => {
       return res.status(200).send(channel)
     }).catch(err => {
-      console.log('===============ERROR AL ENVIAR WP=====================');
       console.log(err);
-      console.log('====================================');
+      return res.status(500).send(err)
     })
   })
 
@@ -210,7 +208,7 @@ function createTask(from, channelSid) {
     taskChannel: 'chat',
     timeout: 3600,
     attributes: JSON.stringify({
-      name: from.replace('whatsapp:+', ''),
+      name: from.replace('whatsapp:', ''),
       channelSid: channelSid || "default",
       channelType: 'whatsapp',
     })
