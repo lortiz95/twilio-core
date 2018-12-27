@@ -11,7 +11,7 @@ const headers = { 'Content-Type': 'application/x-www-form-urlencoded', "Access-C
 exports.onMessage = (data) => {
     console.log(data)
     const msg = JSON.parse(data);
-    let payload = { From: '+whatsapp' + msg.from, Body: msg.text, To: msg.to }
+    let payload = { From: 'whatsapp:+' + msg.from, Body: msg.text, To: msg.to }
     return whatsapp.interaction(payload)
 }
 

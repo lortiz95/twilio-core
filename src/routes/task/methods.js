@@ -11,8 +11,6 @@ const TWILIO_WORKSPACE_SID = 'WS69927d878405ad5ee52c7ede7ef7dc8f';
 const TWILIO_WORKFLOW_SID = 'WWb51c8f5d8c4801ed5dd32b91bfb493a5';
 const TWILIO_CHAT_SERVICE_SID = 'IS015edca31b264901ad0704be93a59df8';
 
-const API_WEBHOOK = 'http://localhost:4000'
-
 
 const twilio = client;
 const chatService = twilio.chat.services(TWILIO_CHAT_SERVICE_SID);
@@ -55,6 +53,9 @@ exports.subscribe = function(req, res) {
   console.log('adding member')
   
   let newMember = req.params.worker;
+
+
+
   console.log('====================================');
   console.log(newMember);
   console.log('====================================');
@@ -93,7 +94,7 @@ exports.messages = function(req, res) {
   chatService.channels(req.body.ChannelSid).fetch().then((channel) => {
     let {from, to } = JSON.parse(channel.attributes);
 
-    let  data = { number: from.replace('whatsapp', ''), text: req.body.Body }
+    let  data = { number: from, text: req.body.Body }
     whatsappServices.sendMessage(data)
     .then((response) => {
       return res.status(200).send(channel)
@@ -146,6 +147,7 @@ const WhatsappInteraction = (payload) => {
         })
         .then(({ task, channel, message }) => {
           const msg = `new message received from ${ message.from } with: chatChannelSid ${channel.sid}, taskSid:${task.sid}`;
+          console.log(msg)
           return resolve(task)
         })
         .catch(err => {
@@ -165,10 +167,10 @@ function sendMessage(channel, from, body) {
 }
 
 function getOrCreateChatChannel(from, to, attrs) {
-  const name = from.replace(/[^\w:]/gi, "").replace('whatsapp:', '').replace("+", '');
+  const name = from.replace(/[^\w:]/gi, "");
   console.log(name)
   const uniqueName = `${attrs.channelName}_channel_${name}`;
-  const channelAttributes = { from, to };
+  const channelAttributes = { from, to, type: 'public' };
 
   return fetchChannel(uniqueName, channelAttributes).catch(err => {
 
@@ -205,7 +207,7 @@ function fetchChannel(uniqueName, channelAttributes) {
 }
 
 function addMemberToChannel(channel, identity, attrs) {
-  return chatService.channels(channel.sid).members.create({ identity: identity.replace("+whatsapp:+", ''), attributes: JSON.stringify(attrs)})
+  return chatService.channels(channel.sid).members.create({ identity: identity, attributes: JSON.stringify(attrs)})
     .then(member => channel)
     .catch(err => {
       console.error(`unable to add a member to the channel ${channel.uniqueName}`,err);
@@ -228,7 +230,7 @@ function createTask(from, channelSid) {
     taskChannel: 'chat',
     timeout: 3600,
     attributes: JSON.stringify({
-      name: from.replace('+whatsapp:', ''),
+      name: from,
       channelSid: channelSid || "default",
       channelType: 'whatsapp',
     })
@@ -236,41 +238,6 @@ function createTask(from, channelSid) {
 
   return taskrouterService.tasks.create(data);
 }
-
-
-// client.video.rooms.create({uniqueName: 'DailyStandup'})
-//     .then(room => {
-//       console.log(room)
-//       const data = {
-//         workflowSid: TWILIO_WORKFLOW_SID,
-//         taskChannel: 'voice',
-//         timeout: 3600,
-//         attributes: JSON.stringify({
-//           name: 'Manuel',
-//           channelSid: room.sid || "default",
-//           channelType: 'web',
-//         })
-//       };
-      
-//       taskrouterService.tasks.create(data).then((response) => {
-//         console.log('====================================');
-//         console.log(response);
-//         console.log('====================================');
-//       })
-      
-//     })
-//     .done();
-
-
-// getOrCreateOngoingTasks("+whatsapp1132066451", 'CH7334cb6d5cdc48b7a0f8efe584d08cf5').then((Response)=> {
-//   console.log('====================================');
-//   console.log(Response);
-//   console.log('====================================');
-// }).catch((erroro) => {
-//   console.log('=============ERROR=======================');
-//   console.log(erroro);
-//   console.log('====================================');
-// })
 
 
 exports.interaction = WhatsappInteraction;
