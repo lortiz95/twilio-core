@@ -36,13 +36,12 @@ let docs = []
 
 const getForm = (dni) => (
   new Promise((resolve, reject) => (
-    clientdb.where('doc', '==', dni).limit(1).get().then(snapshot => {
+    clientdb.where('doc', "==", dni).limit(1).get().then(snapshot => {
       snapshot.forEach((doc => { docs.push(doc.data()) }))
       resolve(docs[0])
       
     }).catch((err) => {
       reject(err)
-      res.status(500).send('err')
     }) 
   ))
 )
