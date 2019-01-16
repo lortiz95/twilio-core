@@ -7,6 +7,7 @@ const app         = express();
 const http        = require('http').Server(app);
 const io          = require('socket.io')(http);
 const cors        = require('cors');
+const cron        = require('./src/cron')
 
 const PORT = process.env.PORT || 8080
 
@@ -32,6 +33,8 @@ app.post('/response', (req, res) => {
 require('./src/routes')(app);
 
 require('./src/services/socket').run(io);
+
+// cron.checkDeudores()
 
 http.listen(PORT, ()=>{
     console.log('====================================');

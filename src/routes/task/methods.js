@@ -212,5 +212,28 @@ function createTask(from, channelSid) {
 
 
 
+function createGenericTask(from, channelSid) {
+
+  const data = {
+    workflowSid: TWILIO_WORKFLOW_SID,
+    taskChannel: 'chat',
+    timeout: 3600,
+    attributes: JSON.stringify({
+      name: from.replace('whatsapp:', ''),
+      channelSid: channelSid || "default",
+      channelType: from.search('whatsapp') > 0 ? 'whatsapp' : 'sms',
+    })
+  };
+
+  return taskrouterService.tasks.create(data);
+}
+
+
+createGenericTask('1132066451', 'CHb0cb4f5081fd48ee873e87223a517ae3').then(task => {
+  console.log('====================================');
+  console.log(task);
+  console.log('====================================');
+})
+
 
 exports.interaction = WhatsappInteraction;
