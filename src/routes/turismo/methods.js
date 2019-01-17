@@ -79,6 +79,14 @@ exports.saveForm = (req, res) => {
   })
 }
 
+exports.saveChat = (req, res) => {
+  let data = req.body;
+  console.log('====================================');
+  console.log(data);
+  console.log('====================================');
+  res.status(200).send("success")
+}
+
 
 exports.getDate = (req, res) => {
   let msg = `La próxima cita disponible es Lunes ${new Date().getDate() + 7} de Enero a las 08:30 AM ¿Desea confirmarla?`

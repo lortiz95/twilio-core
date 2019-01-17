@@ -9,6 +9,8 @@ module.exports = server => {
 
     server.post('/api/save/form', methods.saveForm)
 
+    server.post('/api/save/chat', methods.saveChat)
+
     server.post('/api/save/client', methods.addClient)
     
 
