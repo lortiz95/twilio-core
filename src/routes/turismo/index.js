@@ -8,6 +8,7 @@ module.exports = server => {
     server.post('/api/turismo/dni', methods.checkDoc);
 
     server.post('/api/save/form', methods.saveForm)
+
     server.post('/api/save/client', methods.addClient)
     
 
