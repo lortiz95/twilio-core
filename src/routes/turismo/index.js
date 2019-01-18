@@ -6,6 +6,9 @@ module.exports = server => {
 
     server.post('/api/turismo/dni/:dni', methods.checkDoc);
     server.post('/api/turismo/dni', methods.checkDoc);
+    
+    server.post('/api/turismo/doc', methods.checkDNI);
+    
 
     server.post('/api/save/form', methods.saveForm)
 

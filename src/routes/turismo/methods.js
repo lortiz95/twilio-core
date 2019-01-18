@@ -53,7 +53,18 @@ exports.checkDoc = (req, res) => {
     res.status(200).send(form.name)
   })
   .catch(err => {
-    res.status(500).send('err')
+    res.status(200).send(null)
+  })
+}
+
+exports.checkDNI = (req, res) => {
+  let doc = req.body.doc;
+  getForm(doc)
+  .then(form => {
+    res.status(200).send(form.name)
+  })
+  .catch(err => {
+    res.status(502).send(null)
   })
 }
 
