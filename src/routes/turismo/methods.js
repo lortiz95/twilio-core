@@ -32,14 +32,14 @@ const settings = {/* your settings... */ timestampsInSnapshots: true};
 firebase.admin.firestore().settings(settings);
 
 let clientdb = firebase.admin.firestore().collection('clientes')
-let docs = []
+
 
 const getForm = (doc) => (
   new Promise((resolve, reject) => (
     clientdb.where('doc', "==", doc).limit(1).get().then(snapshot => {
+      let docs = []
       snapshot.forEach((doc => { docs.push(doc.data()) }))
       resolve(docs[0])
-      
     }).catch((err) => {
       reject(err)
     }) 
