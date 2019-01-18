@@ -34,9 +34,9 @@ firebase.admin.firestore().settings(settings);
 let clientdb = firebase.admin.firestore().collection('clientes')
 let docs = []
 
-const getForm = (dni) => (
+const getForm = (doc) => (
   new Promise((resolve, reject) => (
-    clientdb.where('doc', "==", dni).limit(1).get().then(snapshot => {
+    clientdb.where('doc', "==", doc).limit(1).get().then(snapshot => {
       snapshot.forEach((doc => { docs.push(doc.data()) }))
       resolve(docs[0])
       
@@ -47,8 +47,8 @@ const getForm = (dni) => (
 )
 
 exports.checkDoc = (req, res) => {
-  let dni = req.body.dni;
-  getForm(dni)
+  let doc = req.body.doc;
+  getForm(doc)
   .then(form => {
     res.status(200).send(form.name)
   })
@@ -58,7 +58,7 @@ exports.checkDoc = (req, res) => {
 }
 
 exports.addClient = (req, res) => {
-  let dni = req.body.doc;
+  let doc = req.body.doc;
   clientdb.doc(Number(req.body.phone).toString()).set(req.body)
   .then(() => {
     res.status(200).send(req.body.name)
