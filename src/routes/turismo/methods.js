@@ -9,6 +9,8 @@ const moment = require('moment');
 const client = require('twilio')(accountSid, authToken);
 const VoiceResponse = require('twilio').twiml.VoiceResponse;
 
+const axios = require('axios');
+
 const voiceConf = {
     language: 'es-ES',
     voice : 'alice'
@@ -34,9 +36,9 @@ firebase.admin.firestore().settings(settings);
 let clientdb = firebase.admin.firestore().collection('clientes')
 
 
-const getForm = (doc) => (
+const getForm = (type, value) => (
   new Promise((resolve, reject) => (
-    clientdb.where('doc', "==", doc).limit(1).get().then(snapshot => {
+    clientdb.where(type, "==", value).limit(1).get().then(snapshot => {
       let docs = []
       snapshot.forEach((doc => { docs.push(doc.data()) }))
       resolve(docs[0])
@@ -46,9 +48,19 @@ const getForm = (doc) => (
   ))
 )
 
+exports.checkPhone = (req, res) => {
+  getForm('phone', req.body.phone)
+  .then(form => {
+    res.status(200).send(form.name)
+  })
+  .catch(err => {
+    res.status(200).send(null)
+  })
+}
+
 exports.checkDoc = (req, res) => {
   let doc = req.body.doc;
-  getForm(doc)
+  getForm('doc', doc)
   .then(form => {
     res.status(200).send(form.name)
   })
@@ -59,7 +71,7 @@ exports.checkDoc = (req, res) => {
 
 exports.checkDNI = (req, res) => {
   let doc = req.body.doc;
-  getForm(doc)
+  getForm('doc', doc)
   .then(form => {
     res.status(200).send(form.name)
   })
@@ -83,7 +95,18 @@ exports.addClient = (req, res) => {
 
 exports.saveForm = (req, res) => {
   let data = req.body;
+  console.log('====================================');
+  console.log(data);
+  console.log('====================================');
   clientdb.doc(Number(data.phone).toString()).collection('reviews').add({...data, medio : 'VoiceBot', fecha: moment().format('DD/MM/YY HH:mm:ss')}).then(() => {
+    clientdb.doc(Number(data.phone).toString()).get().then(doc => {
+      console.log('===============USER=====================');
+      console.log(doc.data());
+      console.log('====================================');
+      emailService('oteroeiras@gmail.com', 'Iberoestar', 'Manuel Otero')
+    })
+    
+
     setTimeout(() => {
       res.send("saved")
     }, 2500);
@@ -119,11 +142,62 @@ exports.hadleData = (req, res) => {
   res.status(200).send("msg")
 }
 
+exports.hadleData = (req, res) => {
+  console.log('====================================');
+  console.log(req.body);
+  console.log('====================================');
+  res.status(200).send("msg")
+}
+
+
+exports.sendEmail = (req, res) => {
+  let {email, name, hotel} = req.body;
+  const data = {
+    "message" : {
+      "to": [{ email }],
+      "from_email": 'no-reply@insideone.com.ar',
+      "from_name": 'One Turismo',
+      "subject" : `OneTurismo - Alojamiento`
+  },
+  "template_name" : 'oneturismo-barcelona',
+  "template_content" : [ { "name": "user_fullname",  "content": name }, { "name": "hotel",  "content": hotel }]
+  }
+  axios({ method: 'POST', url: 'https://service-delegator.herokuapp.com/send/email', data })
+  .then((response) => {
+    res.status(200).send('sended')
+  }).catch((err) => {
+    res.status(400).send('err')
+  })
+}
+
 exports.saveQuestion = (req, res) => {
   console.log('===============QUESTIONS=====================');
   console.log(req.body);
   console.log('====================================');
+  let {tomar, respirar, pulso, visita} = req.body;
+
+  let description = `Durante la semana el paciente ${tomar === 'si' ? '' : 'no'} ha tomado su medicacion de forma regular,
+  ${respirar === 'si' ? '' : 'no'} ha presentado dificultades para respirar y ${pulso === 'si' ? '' : 'no'} registro pulso irregular.
+  Se le indico reservar una cita con un especialista el proximo mes`;
+
+  console.log(description)
   
   res.status(200).send("")
 
+}
+
+
+
+const emailService = (email, hotel, name) => {
+  const data = {
+    "message" : {
+      "to": [{ email }],
+      "from_email": 'no-reply@insideone.com.ar',
+      "from_name": 'One Turismo',
+      "subject" : `OneTurismo - Alojamiento`
+  },
+  "template_name" : 'oneturismo-barcelona',
+  "template_content" : [ { "name": "user_fullname",  "content": name }, { "name": "hotel",  "content": hotel }]
+  }
+  axios({ method: 'POST', url: 'https://service-delegator.herokuapp.com/send/email', data })
 }

@@ -8,9 +8,13 @@ module.exports = server => {
     server.post('/api/turismo/dni', methods.checkDoc);
     
     server.post('/api/turismo/doc', methods.checkDNI);
+
+    server.post('/api/turismo/phone', methods.checkPhone);
     
 
     server.post('/api/save/form', methods.saveForm)
+
+    server.post('/api/send/email', methods.sendEmail)
 
     server.post('/api/save/chat', methods.saveChat)
 
@@ -19,10 +23,14 @@ module.exports = server => {
 
     server.post('/api/health/dni', methods.checkDoc);
     server.get('/api/getDate', methods.getDate)
-    server.post('/api/save/questions', methods.saveQuestion);
+
+
 
     server.get('/api/getTurn', methods.getTurn)
 
     server.post('/api/turismo/chat', methods.hadleData)
+
+
+    server.post('/api/save/salud/seguimiento', methods.saveQuestion);
     
 };
