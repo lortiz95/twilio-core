@@ -72,60 +72,31 @@ exports.checkDoc = (req, res) => {
 exports.checkDNI = (req, res) => {
   let doc = req.body.doc;
   getForm('doc', doc)
-  .then(form => {
-    res.status(200).send(form.name)
-  })
-  .catch(err => {
-    res.status(502).send(null)
-  })
+  .then(form => { res.status(200).send(form.name) })
+    .catch(err => { res.status(502).send(null) })
 }
 
 exports.addClient = (req, res) => {
   let doc = req.body.doc;
   clientdb.doc(Number(req.body.phone).toString()).set(req.body)
-  .then(() => {
-    res.status(200).send(req.body.name)
-  })
-  .catch((err) => {
-    res.status(500).send('err')
-  })
-  
-    
+    .then(() => { res.status(200).send(req.body.name) })
+      .catch((err) => { res.status(500).send('err') })
 }
 
 exports.saveForm = (req, res) => {
   let data = req.body;
-  console.log('====================================');
-  console.log(data);
-  console.log('====================================');
   clientdb.doc(Number(data.phone).toString()).collection('reviews').add({...data, medio : 'VoiceBot', fecha: moment().format('DD/MM/YY HH:mm:ss')}).then(() => {
-    clientdb.doc(Number(data.phone).toString()).get().then(doc => {
-      console.log('===============USER=====================');
-      console.log(doc.data());
-      console.log('====================================');
-      emailService('oteroeiras@gmail.com', 'Iberoestar', 'Manuel Otero')
-    })
-    
-
-    setTimeout(() => {
-      res.send("saved")
-    }, 2500);
+    res.send("saved");
   })
 }
 exports.infoAlojamiento = (req, res) => {
   let data = req.body;
   clientdb.doc(Number(data.phone).toString()).collection('reviews').add({...data, medio : 'VoiceBot', fecha: moment().format('DD/MM/YY HH:mm:ss')}).then(() => {
     clientdb.doc(Number(data.phone).toString()).get().then(doc => {
-      console.log('===============USER=====================');
-      console.log(doc.data());
-      console.log('====================================');
-      emailService('oteroeiras@gmail.com', 'Iberoestar', 'Manuel Otero')
-    })
-    
-
-    setTimeout(() => {
+      let user = doc.data();
+      if(user && user.email){ emailService(user.email, data.establecimiento, user.name + user.lastname)}
       res.send("saved")
-    }, 2500);
+    })
   })
 }
 
