@@ -10,6 +10,8 @@ module.exports = server => {
     server.post('/api/turismo/doc', methods.checkDNI);
 
     server.post('/api/turismo/phone', methods.checkPhone);
+
+    server.post('/api/info/alojamiento', methods.infoAlojamiento);
     
 
     server.post('/api/save/form', methods.saveForm)

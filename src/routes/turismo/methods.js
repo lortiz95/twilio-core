@@ -112,6 +112,22 @@ exports.saveForm = (req, res) => {
     }, 2500);
   })
 }
+exports.infoAlojamiento = (req, res) => {
+  let data = req.body;
+  clientdb.doc(Number(data.phone).toString()).collection('reviews').add({...data, medio : 'VoiceBot', fecha: moment().format('DD/MM/YY HH:mm:ss')}).then(() => {
+    clientdb.doc(Number(data.phone).toString()).get().then(doc => {
+      console.log('===============USER=====================');
+      console.log(doc.data());
+      console.log('====================================');
+      emailService('oteroeiras@gmail.com', 'Iberoestar', 'Manuel Otero')
+    })
+    
+
+    setTimeout(() => {
+      res.send("saved")
+    }, 2500);
+  })
+}
 
 exports.saveChat = (req, res) => {
   let data = req.body;
