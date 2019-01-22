@@ -14,7 +14,9 @@ module.exports = server => {
     server.post('/api/step/validateDoc', methods.checkDoc);
     
 
-	server.get('/api/cron/deudores', cron.checkDeudores);
+    server.get('/api/cron/deudores', cron.checkDeudores);
+    
+	server.get('/api/connect/call', cron.callConnect);
 
 
 };

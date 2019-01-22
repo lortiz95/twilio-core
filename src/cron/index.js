@@ -12,6 +12,14 @@ const voiceConf = {
     voice : 'alice'
 }
 
+exports.callConnect = function (req, res) {
+    const response = new VoiceResponse();
+    response.dial('+5440001975');
+    response.say('Lo estamos conectado con el agente!');
+
+    console.log(response.toString());
+}
+
 
 const checkDeudores = (req, res) => {
     let docs = []

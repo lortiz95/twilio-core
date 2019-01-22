@@ -34,11 +34,24 @@ const settings = {/* your settings... */ timestampsInSnapshots: true};
 firebase.admin.firestore().settings(settings);
 
 let clientdb = firebase.admin.firestore().collection('clientes')
+let pacientsdb = firebase.admin.firestore().collection('pacientes')
 
 
 const getForm = (type, value) => (
   new Promise((resolve, reject) => (
     clientdb.where(type, "==", value).limit(1).get().then(snapshot => {
+      let docs = []
+      snapshot.forEach((doc => { docs.push(doc.data()) }))
+      resolve(docs[0])
+    }).catch((err) => {
+      reject(err)
+    }) 
+  ))
+)
+
+const getDoc = (type, value) => (
+  new Promise((resolve, reject) => (
+    pacientsdb.where(type, "==", value).limit(1).get().then(snapshot => {
       let docs = []
       snapshot.forEach((doc => { docs.push(doc.data()) }))
       resolve(docs[0])
@@ -67,13 +80,6 @@ exports.checkDoc = (req, res) => {
   .catch(err => {
     res.status(200).send(null)
   })
-}
-
-exports.checkDNI = (req, res) => {
-  let doc = req.body.doc;
-  getForm('doc', doc)
-  .then(form => { res.status(200).send(form.name) })
-    .catch(err => { res.status(502).send(null) })
 }
 
 exports.addClient = (req, res) => {
@@ -129,52 +135,6 @@ exports.hadleData = (req, res) => {
   res.status(200).send("msg")
 }
 
-exports.hadleData = (req, res) => {
-  console.log('====================================');
-  console.log(req.body);
-  console.log('====================================');
-  res.status(200).send("msg")
-}
-
-
-exports.sendEmail = (req, res) => {
-  let {email, name, hotel} = req.body;
-  const data = {
-    "message" : {
-      "to": [{ email }],
-      "from_email": 'no-reply@insideone.com.ar',
-      "from_name": 'One Turismo',
-      "subject" : `OneTurismo - Alojamiento`
-  },
-  "template_name" : 'oneturismo-barcelona',
-  "template_content" : [ { "name": "user_fullname",  "content": name }, { "name": "hotel",  "content": hotel }]
-  }
-  axios({ method: 'POST', url: 'https://service-delegator.herokuapp.com/send/email', data })
-  .then((response) => {
-    res.status(200).send('sended')
-  }).catch((err) => {
-    res.status(400).send('err')
-  })
-}
-
-exports.saveQuestion = (req, res) => {
-  console.log('===============QUESTIONS=====================');
-  console.log(req.body);
-  console.log('====================================');
-  let {tomar, respirar, pulso, visita} = req.body;
-
-  let description = `Durante la semana el paciente ${tomar === 'si' ? '' : 'no'} ha tomado su medicacion de forma regular,
-  ${respirar === 'si' ? '' : 'no'} ha presentado dificultades para respirar y ${pulso === 'si' ? '' : 'no'} registro pulso irregular.
-  Se le indico reservar una cita con un especialista el proximo mes`;
-
-  console.log(description)
-  
-  res.status(200).send("")
-
-}
-
-
-
 const emailService = (email, hotel, name) => {
   const data = {
     "message" : {
@@ -187,4 +147,62 @@ const emailService = (email, hotel, name) => {
   "template_content" : [ { "name": "user_fullname",  "content": name }, { "name": "hotel",  "content": hotel }]
   }
   axios({ method: 'POST', url: 'https://service-delegator.herokuapp.com/send/email', data })
+}
+
+
+
+// Salud
+
+exports.getDoc = (req, res) => {
+  let doc = req.body.doc;
+  getDoc('doc', doc)
+  .then(form => { res.status(200).send(form.name) })
+    .catch(err => { res.status(502).send(null) })
+}
+
+
+exports.saveQuestion = (req, res) => {
+  console.log('===============QUESTIONS=====================');
+  console.log(req.body);
+  console.log('====================================');
+  let {tomar, respirar, pulso, visita} = req.body;
+
+  let description = `Durante la semana el paciente ${!confirmResponse(tomar) ? '' : 'no'} ha tomado su medicación de forma regular,
+  ${confirmResponse(respirar) ? '' : 'no'} ha presentado dificultades para respirar y ${confirmResponse(pulso) ? '' : 'no'} registró pulso irregular.
+  Se le indicó reservar una cita con un especialista el próximo mes`;
+
+  console.log(description)
+  
+  res.status(200).send("")
+
+}
+
+const confirmResponse = (param) => param.toLowerCase() == 'si' || param.toLowerCase() === 'sí' || param.toLowerCase().search('si')|| param.toLowerCase().search('sí') ? true : false;
+
+exports.saveTurn = (req, res) => {
+  console.log('===============Turno =====================');
+  console.log(req.body);
+  console.log('====================================');
+  
+  res.status(200).send("")
+
+}
+
+
+
+// Collab 
+exports.checkDNI = (req, res) => {
+  let doc = req.body.doc;
+  getForm('doc', doc)
+  .then(form => { res.status(200).send(form.name) })
+    .catch(err => { res.status(502).send(null) })
+}
+
+exports.saveClient = (req, res) => {
+  console.log('====================================');
+  console.log(req.body);
+  console.log('====================================');
+  clientdb.doc(Number(req.body.phone).toString()).set(req.body)
+    .then(() => { res.status(200).send(req.body.name) })
+      .catch((err) => { res.status(500).send('err') })
 }
