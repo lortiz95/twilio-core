@@ -6,6 +6,10 @@ const authToken = '5dd867d1ff776ac5c61f5f5fc8b95504';
 
 const client = require('twilio')(accountSid, authToken);
 const VoiceResponse = require('twilio').twiml.VoiceResponse;
+const cron = require('node-cron');
+const axios = require('axios');
+
+const whatsappServices = require('../services/whatsapp');
 
 const voiceConf = {
     language: 'es-ES',
@@ -48,3 +52,37 @@ const checkDeudores = (req, res) => {
 }
 
 exports.checkDeudores = checkDeudores;
+
+
+exports.sendSMSRemider = (to, body) => {
+    return client.messages.create({to, body, from: '+19282966472'}) 
+}
+
+
+exports.sendWpRemider = (to) => {
+    let toSend = []
+    to.map(({number, text}) => toSend.push(whatsappServices.sendMessage({ number: '+' + number, text })))
+    return Promise.all(toSend)
+}
+
+
+
+// sendWpRemider('1132066451', 'Hola MAnuel').then((resolve) => {
+//     console.log('====================================');
+//     console.log(resolve);
+//     console.log('====================================');
+// })
+
+
+// sendSMSRemider('+5491166959773', 'Federico le recordamos que su turno es el Martes 12 de Febrero a las 14:00. Con el doctor Rodigo Rodiguez, Cardiologia')
+
+
+
+
+
+// client.studio.flows('FW090c435421f71638bd37e645b8e69754')
+// .executions
+// .create({to: '+541132066451', from: '+541151686053'})
+// .then(execution => console.log(execution))
+// .done();
+

@@ -9,6 +9,8 @@ const moment = require('moment');
 const client = require('twilio')(accountSid, authToken);
 const VoiceResponse = require('twilio').twiml.VoiceResponse;
 
+const cron = require('../../cron');
+
 const axios = require('axios');
 
 const voiceConf = {
@@ -17,25 +19,28 @@ const voiceConf = {
 }
 
 
-let data = {
-    '34347617' : {
-        name: 'Federico'
-    },
-    '38991552' : {
-        name: 'Federico'
-    },
-    '30883165' : {
-        name: 'Ignacia'
-    }
-}
-
-
-const settings = {/* your settings... */ timestampsInSnapshots: true};
+const settings = {timestampsInSnapshots: true};
 firebase.admin.firestore().settings(settings);
 
 let clientdb = firebase.admin.firestore().collection('clientes')
 let pacientsdb = firebase.admin.firestore().collection('pacientes')
+let alerts = firebase.admin.firestore().collection('alerts')
 
+const confirmResponse = (param) => param.toLowerCase() == 'si' || param.toLowerCase() === 'sí' || param.toLowerCase().search('si')|| param.toLowerCase().search('sí') ? true : false;
+
+const emailService = (email, hotel, name) => {
+  const data = {
+    "message" : {
+      "to": [{ email }],
+      "from_email": 'no-reply@insideone.com.ar',
+      "from_name": 'One Turismo',
+      "subject" : `OneTurismo - Alojamiento`
+  },
+  "template_name" : 'oneturismo-barcelona',
+  "template_content" : [ { "name": "user_fullname",  "content": name }, { "name": "hotel",  "content": hotel }]
+  }
+  axios({ method: 'POST', url: 'https://service-delegator.herokuapp.com/send/email', data })
+}
 
 const getForm = (type, value) => (
   new Promise((resolve, reject) => (
@@ -53,7 +58,7 @@ const getDoc = (type, value) => (
   new Promise((resolve, reject) => (
     pacientsdb.where(type, "==", value).limit(1).get().then(snapshot => {
       let docs = []
-      snapshot.forEach((doc => { docs.push(doc.data()) }))
+      snapshot.forEach((doc => { docs.push({id: doc.id, ...doc.data()}) }))
       resolve(docs[0])
     }).catch((err) => {
       reject(err)
@@ -95,6 +100,7 @@ exports.saveForm = (req, res) => {
     res.send("saved");
   })
 }
+
 exports.infoAlojamiento = (req, res) => {
   let data = req.body;
   clientdb.doc(Number(data.phone).toString()).collection('reviews').add({...data, medio : 'VoiceBot', fecha: moment().format('DD/MM/YY HH:mm:ss')}).then(() => {
@@ -106,88 +112,42 @@ exports.infoAlojamiento = (req, res) => {
   })
 }
 
-exports.saveChat = (req, res) => {
-  let data = req.body;
-  console.log('====================================');
-  console.log(data);
-  console.log('====================================');
-  res.status(200).send("success")
-}
-
-
-exports.getDate = (req, res) => {
-  let msg = `La próxima cita disponible es Lunes ${new Date().getDate() + 7} de Enero a las 08:30 AM ¿Desea confirmarla?`
-  res.status(200).send(msg)
-
-}
-
-exports.getTurn = (req, res) => {
-  console.log('====================================');
-  console.log(req.body);
-  console.log('====================================');
-  res.status(200).send("msg")
-}
-
-exports.hadleData = (req, res) => {
-  console.log('====================================');
-  console.log(req.body);
-  console.log('====================================');
-  res.status(200).send("msg")
-}
-
-const emailService = (email, hotel, name) => {
-  const data = {
-    "message" : {
-      "to": [{ email }],
-      "from_email": 'no-reply@insideone.com.ar',
-      "from_name": 'One Turismo',
-      "subject" : `OneTurismo - Alojamiento`
-  },
-  "template_name" : 'oneturismo-barcelona',
-  "template_content" : [ { "name": "user_fullname",  "content": name }, { "name": "hotel",  "content": hotel }]
-  }
-  axios({ method: 'POST', url: 'https://service-delegator.herokuapp.com/send/email', data })
-}
-
-
-
 // Salud
 
-exports.getDoc = (req, res) => {
+exports.getDocu = (req, res) => {
   let doc = req.body.doc;
   getDoc('doc', doc)
   .then(form => { res.status(200).send(form.name) })
     .catch(err => { res.status(502).send(null) })
 }
 
-
 exports.saveQuestion = (req, res) => {
-  console.log('===============QUESTIONS=====================');
-  console.log(req.body);
-  console.log('====================================');
-  let {tomar, respirar, pulso, visita} = req.body;
+  let {tomar, respirar, pulso, visita, doc} = req.body;
 
-  let description = `Durante la semana el paciente ${!confirmResponse(tomar) ? '' : 'no'} ha tomado su medicación de forma regular,
+  let descripcion = `Durante la semana el paciente ${confirmResponse(tomar) ? '' : 'no'} ha tomado su medicación de forma regular,
   ${confirmResponse(respirar) ? '' : 'no'} ha presentado dificultades para respirar y ${confirmResponse(pulso) ? '' : 'no'} registró pulso irregular.
-  Se le indicó reservar una cita con un especialista el próximo mes`;
+  Se le indicó reservar una cita con un especialista el próximo mes.`;
 
-  console.log(description)
+  let fecha = moment().format('DD/MM hh:mm')
+  let medio = 'Bot';
+  let especialidad = 'Cardiología'
+
+  getDoc('doc', doc).then(doc => {
+    pacientsdb.doc(doc.id).collection('seguimiento').add({ fecha, medio, especialidad, descripcion }).then(() => {
+      res.status(200).send("added seguimiento")
+    })
+  })
   
-  res.status(200).send("")
-
 }
-
-const confirmResponse = (param) => param.toLowerCase() == 'si' || param.toLowerCase() === 'sí' || param.toLowerCase().search('si')|| param.toLowerCase().search('sí') ? true : false;
 
 exports.saveTurn = (req, res) => {
-  console.log('===============Turno =====================');
-  console.log(req.body);
-  console.log('====================================');
-  
-  res.status(200).send("")
-
+  let {doc, fecha, especialidad} = req.body;
+  getDoc('doc', doc).then(data => {
+    pacientsdb.doc(data.id).collection('citas').add({ fecha, especialidad }).then(() => {
+      res.status(200).send("added cita")
+    })
+  })
 }
-
 
 
 // Collab 
@@ -199,10 +159,72 @@ exports.checkDNI = (req, res) => {
 }
 
 exports.saveClient = (req, res) => {
-  console.log('====================================');
-  console.log(req.body);
-  console.log('====================================');
   clientdb.doc(Number(req.body.phone).toString()).set(req.body)
     .then(() => { res.status(200).send(req.body.name) })
       .catch((err) => { res.status(500).send('err') })
+}
+
+
+// Helpy
+exports.emergency = (req, res) => {
+  console.log(req.body)
+  alerts.add(req.body).then((response) => {
+    res.status(200).send('Emergency added')
+  }).catch(err => {
+    res.status(404).send('Error');
+  })
+  // let {doc, descripcion, canal, fecha, ubicacion} = req.body;
+  // let payload = {descripcion, canal, fecha: moment().format('DD/MM/YY HH:mm:ss'), ubicacion};
+  // addEmergency(doc, payload).then(()=> {
+  //   res.status(200).send('Emergency added')
+  // }).catch((err) => {
+  //   console.log('====================================');
+  //   console.log(err);
+  //   console.log('====================================');
+  // })
+}
+
+const addEmergency = (doc, data) => {
+  return getDoc('doc', doc)
+  .then((response) => {
+    return pacientsdb.doc(response.id).collection('emergencias').add(data)
+  })
+}
+
+
+// Remainer
+
+const emailreminder = (email, hotel, name) => {
+  const data = {
+    "message" : {
+      "to": [{ email }],
+      "from_email": 'no-reply@insideone.com.ar',
+      "from_name": 'One Health',
+      "subject" : `OneHealth - Turno`
+  },
+  "template_name" : 'onehealth-recordatorio-turno',
+  "template_content" : [ { "name": "name",  "content": name }, { "name": "hotel",  "content": hotel }]
+  }
+  axios({ method: 'POST', url: 'https://service-delegator.herokuapp.com/send/email', data })
+}
+
+exports.sendRemainer = (req, res) => {
+  let { doc } = req.body;
+  getDoc('doc', doc).then((user) => {
+    pacientsdb.doc(user.id).collection('contactos').get().then(snapshot => {
+      let contacts = [];
+      snapshot.docs.forEach(doc => {
+        contacts.push({ number: doc.data().phone, text: `Hola ${doc.data().nombre} le recordamos que ${user.name} tiene una cita el dia 12 de Febrero.` });
+      })
+      setTimeout(() => {
+        cron.sendWpRemider(contacts).then((response) => {
+          res.status(200).send('success')
+        }).catch((err) => {
+          res.status(500).send('err')
+        })
+      }, 1500);
+    }).catch(err => {
+      res.status(500).send('err')
+    })
+  })
 }

@@ -19,24 +19,37 @@ module.exports = server => {
 
     
     server.post('/api/add/client', methods.addClient)
-    
-
-    server.get('/api/getTurn', methods.getTurn)
-
-    server.post('/api/turismo/chat', methods.hadleData)
 
 
-    server.post('/api/salud/dni', methods.getDoc);
+    server.post('/api/salud/dni', methods.getDocu);
     server.post('/api/save/salud/seguimiento', methods.saveQuestion);
     server.post('/api/save/salud/turno', methods.saveTurn);
 
 
-    server.post('/api/save/chat', methods.saveChat)
     server.post('/api/save/client', methods.saveClient)
 
 
-    server.post('/api/helpy/alert', (req, res) => res.status(200).send('alert received!'))
+    server.post('/api/helpy/alert', methods.emergency)
     server.get('/api/helpy/alert', (req, res) => res.status(200).send('alert received!'))
+
+    server.post('/response', (req, res) => {
+        console.log('====================================');
+        console.log(req.body);
+        console.log('====================================');
+        res.status(200).send('alert received!')
+    })
+
+    server.get('/response', (req, res) => {
+        console.log('====================================');
+        console.log(req);
+        console.log('====================================');
+        res.status(200).send('alert received!')
+    })
+
+
+
+    server.post('/api/send/remainer', methods.sendRemainer)
+
 
     
 };
