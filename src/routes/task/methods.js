@@ -214,3 +214,89 @@ function createTask(from, channelSid) {
 
 
 exports.interaction = WhatsappInteraction;
+
+const headers = { 'Content-Type': 'application/x-www-form-urlencoded', "Access-Control-Allow-Origin": "*", };
+
+exports.getEvents = function(req, res) {
+
+  console.log('=========================================');
+  console.log(req.body);
+  console.log('=========================================');
+
+  if(req.body.EventType === 'reservation.created') {
+    console.log(req.body.ReservationSid)
+    client.taskrouter.v1
+      .workspaces(req.body.WorkspaceSid)
+      .tasks(req.body.TaskSid)
+      .reservations(req.body.ReservationSid)
+      .update({
+        reservationStatus: 'accepted',
+        instruction: 'conference',
+        conferenceStatusCallback: 'https://7da5f5b7.ngrok.io/api/conference',
+        conferenceStatusCallbackEvent: [
+          'start',
+          'end',
+          'join',
+          'leave',
+          'mute',
+          'hold'
+        ]
+      })
+      .then(() => 
+      client.taskrouter.v1
+      .workspaces(req.body.WorkspaceSid)
+      .tasks(req.body.TaskSid)
+      .reservations(req.body.ReservationSid)
+      .update({
+        reservationStatus: 'accepted',
+      })
+      .then(() => res.status(200).send(headers))
+      )
+  }
+
+  // res.status(200).send(headers)
+}
+
+exports.conferenceEvents = function(req, res) {
+  console.log('____________-_________')
+  console.log(req.body)
+
+  res.status(200).send(headers)
+}
+
+function taskCreate(task) {
+  console.log(task.attributes)
+  let attr = JSON.parse(task.attributes)
+  return taskrouterService
+    .tasks
+    .create({attributes: JSON.stringify({
+      channelType: attr.channelType,
+      channelSid: attr.channelSid,
+      name: attr.name,
+      type: 'sales',
+      preferred_agents: 'agente 1'
+    }), workflowSid: 'WWf8a61548867d0a92938b51a4575464f9', taskChannel: 'chat' })
+} 
+
+exports.transferTask = function(req, res) {
+  console.log(req.body)
+
+  taskrouterService
+    .tasks(req.body.taskSid)
+    .update({
+      assignmentStatus: 'wrapping',
+      reason: 'transfered'
+    })
+    .then(task => {
+      taskCreate(task).then((newTask) => res.status(200).send(newTask))
+    })
+    .done();  
+    // res.send('succes');
+}
+
+exports.genericTask = data => taskrouterService.tasks.create({attributes: JSON.stringify(data.attr), workflowSid: TWILIO_WORKFLOW_SID, taskChannel: data.channel || 'chat' });
+
+
+exports.enqueueTask = () => {
+  
+}

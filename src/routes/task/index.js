@@ -10,4 +10,8 @@ module.exports = server => {
 
 	server.get('/api/subscribe/:channel/:worker', methods.subscribe);
 
+	server.post('/api/getEvents', methods.getEvents);
+	server.post('/api/conference', methods.conferenceEvents);
+
+	server.post('/api/transfer', methods.transferTask);
 };
