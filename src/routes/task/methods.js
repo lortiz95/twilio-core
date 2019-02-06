@@ -243,41 +243,27 @@ const headers = { 'Content-Type': 'application/x-www-form-urlencoded', "Access-C
 exports.getEvents = function(req, res) {
 
   console.log('=========================================');
-  console.log(req.body);
+  console.log(req.body.EventType);
   console.log('=========================================');
 
-  if(req.body.EventType === 'reservation.created') {
-    console.log(req.body.ReservationSid)
-    client.taskrouter.v1
-      .workspaces(req.body.WorkspaceSid)
-      .tasks(req.body.TaskSid)
-      .reservations(req.body.ReservationSid)
-      .update({
-        reservationStatus: 'accepted',
-        instruction: 'conference',
-        conferenceStatusCallback: 'https://7da5f5b7.ngrok.io/api/conference',
-        conferenceStatusCallbackEvent: [
-          'start',
-          'end',
-          'join',
-          'leave',
-          'mute',
-          'hold'
-        ]
-      })
-      .then(() => 
-      client.taskrouter.v1
-      .workspaces(req.body.WorkspaceSid)
-      .tasks(req.body.TaskSid)
-      .reservations(req.body.ReservationSid)
-      .update({
-        reservationStatus: 'accepted',
-      })
-      .then(() => res.status(200).send(headers))
-      )
-  }
+  // if(req.body.EventType === 'reservation.created') {
+  //   console.log(req.body.ReservationSid)
+  //   console.log('asdasdasdasd')
+  //   client.taskrouter.v1
+  //     .workspaces(req.body.WorkspaceSid)
+  //     .tasks(req.body.TaskSid)
+  //     .reservations(req.body.ReservationSid)
+  //     .update({
+  //       from: '+5492215976300',
+  //       instruction: 'call',
+  //       callFrom: '+5492215976300',
+  //       callUrl: ''
+  //     })
+  //     .then(reservation => console.log('reservation',reservation))
+  //     .catch(err => console.log('Error',err))
+  // }
 
-  // res.status(200).send(headers)
+  res.status(200).send(headers).end()
 }
 
 exports.conferenceEvents = function(req, res) {
