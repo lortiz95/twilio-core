@@ -1,10 +1,14 @@
 var admin = require("firebase-admin");
-
 var serviceAccount = require("../config.json");
 
-admin.initializeApp({
+const service = admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: "https://flex-core.firebaseio.com"
 });
 
-exports.admin = admin;
+const settings = {timestampsInSnapshots: true};
+const firestore = admin.firestore().settings(settings);
+
+
+exports.firestore = firestore;
+exports.admin = service;

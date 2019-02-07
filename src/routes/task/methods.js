@@ -242,28 +242,26 @@ const headers = { 'Content-Type': 'application/x-www-form-urlencoded', "Access-C
 
 exports.getEvents = function(req, res) {
 
-  console.log('=========================================');
-  console.log(req.body.EventType);
-  console.log('=========================================');
+   console.log('=========================================');
+   console.log(req.body);
+   console.log('=========================================');
 
-  // if(req.body.EventType === 'reservation.created') {
-  //   console.log(req.body.ReservationSid)
-  //   console.log('asdasdasdasd')
-  //   client.taskrouter.v1
-  //     .workspaces(req.body.WorkspaceSid)
-  //     .tasks(req.body.TaskSid)
-  //     .reservations(req.body.ReservationSid)
-  //     .update({
-  //       from: '+5492215976300',
-  //       instruction: 'call',
-  //       callFrom: '+5492215976300',
-  //       callUrl: ''
-  //     })
-  //     .then(reservation => console.log('reservation',reservation))
-  //     .catch(err => console.log('Error',err))
-  // }
+  //  if(req.body.EventType === 'reservation.created') {
+  //    console.log(req.body.ReservationSid)
+  //    client.taskrouter.v1
+  //      .workspaces(req.body.WorkspaceSid)
+  //      .tasks(req.body.TaskSid)
+  //      .reservations(req.body.ReservationSid)
+  //      .update({
+  //        instruction: 'conference',
+  //        from: '+541151686170',
+  //        reservationStatus: 'pending'
+  //      })
+  //      .then(reservation => console.log('succes'))
+  //      .catch(err => console.log('Error',err))
+  //  }
 
-  res.status(200).send(headers).end()
+  res.status(200).send(headers)
 }
 
 exports.conferenceEvents = function(req, res) {

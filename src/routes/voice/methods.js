@@ -20,6 +20,8 @@ exports.token = (req, res) => {
       applicationSid: appSid})
   );
 
+  capability.addScope(new ClientCapability.IncomingClientScope('lucas'));
+
   const token = capability.toJwt();
   
   res.set('Content-Type', 'application/jwt');
@@ -27,42 +29,79 @@ exports.token = (req, res) => {
 }
 
 exports.call = (req, res) => {
-  // console.log(req.body)
-  // let voiceResponse = new VoiceResponse();
+  let resp = new VoiceResponse();
 
-  // voiceResponse.dial({ callerId: '+541151686170' }, '+541151686170');
-  // res.type('text/xml');
-  // res.send(voiceResponse.toString());
+  // let accountSid = req.body.AccountSid;
+  // let callSid = req.body.CallSid;
+  // let workspaceSid = 'WS886a1106b77a255c9e30c6e823ca5931';
+  
+  console.log(req.body);
 
-  client.calls.create({
-    url: 'https://7da5f5b7.ngrok.io/api/voice/inbound',
-    to: 'client:lortiz',
-    from: '+541151686170'
-  })
-  .then(call => {
-    console.log('call', call)
-  })
+  let json = {
+    type: 'social'
+  }
+
+  resp.enqueue({
+    workflowSid: 'WW5d761c97a82738b08e436eedb4761201'
+  }).task({}, JSON.stringify(json))
+
+  res.setHeader('Content-Type', 'application/xml');
+  res.write(resp.toString());
+  res.end();
+
+  client.taskrouter.workspaces().tasks.create
 }
 
 
 exports.inboundCall = (req, res) => {
-  
-  let resp = new VoiceResponse();
+  let from = JSON.parse(req.body.TaskAttributes).from;
+  let eventType = req.body.EventType; 
+  console.log(from);
+  console.log(eventType);
 
-  let json = {
-    instruction: 'dequeue',
-    to: 'client:lortiz',
-    from: '+541151686170'
+  if (eventType === 'reservation.created' && from === 'client:Anonymous') {
+    client.taskrouter.v1
+      .workspaces(req.body.WorkspaceSid)
+      .tasks(req.body.TaskSid)
+      .reservations(req.body.ReservationSid)
+      .update({
+        instruction: 'conference',
+        from: '+541151686170',
+        endConferenceOnExit: true,
+        startConferenceOnEnter: false,
+        callAccept: false
+      })
+      .then(reservation => console.log('succes'))
+      .catch(err => console.log('Error',err))
   }
-
-  resp.say({language: 'es-ES'}, "Aguarde en linea y sera atendido por uno de nuestros representantes")
-    
-  resp.enqueue({
-    workflowSid: 'WW5d761c97a82738b08e436eedb4761201'
-    })
-    .task({}, JSON.stringify(json))
   
-  res.setHeader('Content-Type', 'application/xml');
-  res.write(resp.toString());
+  res.status(200)
   res.end();
+}
+
+
+exports.getCallRecord = (req, res) => {
+  let records = [];
+  const toFetch = []
+  
+  client.recordings.list().then(recordings => {
+    console.log(recordings.length)
+    let record = {};
+    recordings.map(dataRecord => toFetch.push(client.calls(dataRecord.callSid).fetch().then(call => ({
+      id: dataRecord.sid,
+      from: call.from,
+      to: call.to,
+      duration: dataRecord.duration,
+      dateInit: dataRecord.dateCreated,
+      dateEnd: call.endTime,
+      accountSid: dataRecord.accountSid
+    }))))
+    console.log(toFetch)
+    Promise.all(toFetch).then(resp => {
+      console.log(resp)
+      res.send(resp)
+      res.status(200)
+      res.end()
+    }).catch(err => console.log(err))
+  });
 }

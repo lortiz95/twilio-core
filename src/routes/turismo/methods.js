@@ -18,10 +18,6 @@ const voiceConf = {
     voice : 'alice'
 }
 
-
-const settings = {timestampsInSnapshots: true};
-firebase.admin.firestore().settings(settings);
-
 let clientdb = firebase.admin.firestore().collection('clientes')
 let pacientsdb = firebase.admin.firestore().collection('pacientes')
 let alerts = firebase.admin.firestore().collection('alerts')

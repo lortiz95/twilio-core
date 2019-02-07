@@ -9,7 +9,7 @@ const io          = require('socket.io')(http);
 const cors        = require('cors');
 const cron        = require('./src/cron')
 
-const PORT = process.env.PORT || 8080
+const PORT = process.env.PORT || 8081
 
 app.use(bodyParser.urlencoded({extended: true}));
 
