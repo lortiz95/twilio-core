@@ -28,52 +28,67 @@ exports.token = (req, res) => {
   res.send(token);
 }
 
+
+
 exports.call = (req, res) => {
   let resp = new VoiceResponse();
-
-  // let accountSid = req.body.AccountSid;
-  // let callSid = req.body.CallSid;
-  // let workspaceSid = 'WS886a1106b77a255c9e30c6e823ca5931';
   
   console.log(req.body);
 
-  let json = {
-    type: 'social'
-  }
-
-  resp.enqueue({
-    workflowSid: 'WW5d761c97a82738b08e436eedb4761201'
-  }).task({}, JSON.stringify(json))
+  resp.dial().conference({
+    beep: true,
+    startConferenceOnEnter: true,
+    endConferenceOnExit: true,
+    maxParticipants: 3,
+    statusCallback: 'https://5697c659.ngrok.io/api/voice/conferenceStatus',
+    statusCallbackEvent: 'start end join leave mute hold'
+  }, 'RoomTest')
 
   res.setHeader('Content-Type', 'application/xml');
   res.write(resp.toString());
   res.end();
-
-  client.taskrouter.workspaces().tasks.create
 }
 
 
-exports.inboundCall = (req, res) => {
-  let from = JSON.parse(req.body.TaskAttributes).from;
-  let eventType = req.body.EventType; 
-  console.log(from);
-  console.log(eventType);
+exports.conferenceStatus = (req, res) => {
+  let resp = new VoiceResponse();
+  let data = req.body;
 
-  if (eventType === 'reservation.created' && from === 'client:Anonymous') {
-    client.taskrouter.v1
-      .workspaces(req.body.WorkspaceSid)
-      .tasks(req.body.TaskSid)
-      .reservations(req.body.ReservationSid)
-      .update({
-        instruction: 'conference',
-        from: '+541151686170',
-        endConferenceOnExit: true,
-        startConferenceOnEnter: false,
-        callAccept: false
+  if(req.body.SequenceNumber == 1) {
+    client.taskrouter
+      .workspaces('WS886a1106b77a255c9e30c6e823ca5931')
+      .tasks
+      .create({
+        attributes: JSON.stringify({
+          account_sid: req.body.AccountSid,
+          direction: 'inbound',
+          call_sid: req.body.CallSid,
+          conference: {
+            sid: req.body.ConferenceSid
+          }
+        }), workflowSid: 'WW5d761c97a82738b08e436eedb4761201', taskChannel: 'default'
       })
-      .then(reservation => console.log('succes'))
-      .catch(err => console.log('Error',err))
+      .then(task => console.log(task.sid))
+      .catch(err => console.log(err))
+      .done();
   }
+  console.log('Status',data);
+
+  res.setHeader('Content-Type', 'application/xml');
+  res.write(resp.toString());
+  res.end();
+}
+
+exports.addParticipantConference = (req, res) => {
+  console.log(req.body);
+
+  client.conferences(req.body.conferenceSid)
+    .participants.create({
+      to: req.body.worker,
+      from: req.body.from,
+      earlyMedia: true,
+      endConferenceOnExit: true
+    })
   
   res.status(200)
   res.end();
